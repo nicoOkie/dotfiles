@@ -19,11 +19,12 @@ chezmoi init --apply <github-username>
 
 ### Bootstrap (run once)
 
+- **System update** (Linux only)
 - **Homebrew** (macOS only)
+- **Zsh** + set as default shell
 - **Rust** via rustup (+ clippy, rustfmt, rust-analyzer)
 - **Starship** prompt
 - **mise** version manager
-- Sets **zsh** as default shell
 
 ### Packages (declarative, via package managers)
 
@@ -37,7 +38,6 @@ chezmoi init --apply <github-username>
 | zoxide    | Smarter cd                   |
 | git-delta | Better git diffs             |
 | neovim    | Editor                       |
-| wezterm   | Terminal emulator            |
 
 ## Structure
 

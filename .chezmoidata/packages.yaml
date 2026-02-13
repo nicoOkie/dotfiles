@@ -26,8 +26,8 @@ packages:
       - git
       - git-delta
       - neovim
-    casks:
-      - wezterm
+    casks: []
+    # wezterm managed separately (permission issues with brew adopt)
 
   # Linux distributions
   linux:

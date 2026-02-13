@@ -7,13 +7,27 @@ set -euo pipefail
 echo "🚀 Bootstrapping development environment..."
 
 # ------------------------------------------------------------------------------
+# System update (Linux) - do this first
+# ------------------------------------------------------------------------------
+{{- if ne .chezmoi.os "darwin" }}
+echo "🔄 Updating system packages..."
+if command -v apt &> /dev/null; then
+  sudo apt update && sudo apt upgrade -y
+elif command -v dnf &> /dev/null; then
+  sudo dnf upgrade -y --refresh
+elif command -v pacman &> /dev/null; then
+  sudo pacman -Syu --noconfirm
+fi
+{{- end }}
+
+# ------------------------------------------------------------------------------
 # Ensure curl is available (needed for installers)
 # ------------------------------------------------------------------------------
 {{- if ne .chezmoi.os "darwin" }}
 if ! command -v curl &> /dev/null; then
   echo "📥 Installing curl..."
   if command -v apt &> /dev/null; then
-    sudo apt update && sudo apt install -y curl
+    sudo apt install -y curl
   elif command -v dnf &> /dev/null; then
     sudo dnf install -y curl
   elif command -v pacman &> /dev/null; then
@@ -38,11 +52,28 @@ fi
 {{- end }}
 
 # ------------------------------------------------------------------------------
-# Zsh as default shell
+# Zsh installation & default shell
 # ------------------------------------------------------------------------------
+install_zsh() {
+  if ! command -v zsh &> /dev/null; then
+    echo "🐚 Installing zsh..."
+    {{- if eq .chezmoi.os "darwin" }}
+    brew install zsh
+    {{- else }}
+    if command -v apt &> /dev/null; then
+      sudo apt update && sudo apt install -y zsh
+    elif command -v dnf &> /dev/null; then
+      sudo dnf install -y zsh
+    elif command -v pacman &> /dev/null; then
+      sudo pacman -S --noconfirm zsh
+    fi
+    {{- end }}
+  fi
+}
+
 set_zsh_default() {
   if [[ "$SHELL" != *"zsh"* ]]; then
-    echo "🐚 Setting zsh as default shell..."
+    echo "🔧 Setting zsh as default shell..."
     ZSH_PATH="$(command -v zsh)"
     if [[ -n "$ZSH_PATH" ]]; then
       if ! grep -q "$ZSH_PATH" /etc/shells 2>/dev/null; then
@@ -89,6 +120,7 @@ install_mise() {
 # ------------------------------------------------------------------------------
 # Main
 # ------------------------------------------------------------------------------
+install_zsh
 install_rust
 install_starship
 install_mise
