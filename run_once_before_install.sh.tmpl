@@ -1,0 +1,99 @@
+#!/bin/bash
+set -euo pipefail
+
+# Bootstrap script - runs once before other scripts
+# Installs prerequisites that can't be managed declaratively
+
+echo "🚀 Bootstrapping development environment..."
+
+# ------------------------------------------------------------------------------
+# Ensure curl is available (needed for installers)
+# ------------------------------------------------------------------------------
+{{- if ne .chezmoi.os "darwin" }}
+if ! command -v curl &> /dev/null; then
+  echo "📥 Installing curl..."
+  if command -v apt &> /dev/null; then
+    sudo apt update && sudo apt install -y curl
+  elif command -v dnf &> /dev/null; then
+    sudo dnf install -y curl
+  elif command -v pacman &> /dev/null; then
+    sudo pacman -S --noconfirm curl
+  fi
+fi
+{{- end }}
+
+# ------------------------------------------------------------------------------
+# Homebrew (macOS) - needed before declarative package scripts
+# ------------------------------------------------------------------------------
+{{- if eq .chezmoi.os "darwin" }}
+if ! command -v brew &> /dev/null; then
+  echo "📦 Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [[ -f /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+fi
+{{- end }}
+
+# ------------------------------------------------------------------------------
+# Zsh as default shell
+# ------------------------------------------------------------------------------
+set_zsh_default() {
+  if [[ "$SHELL" != *"zsh"* ]]; then
+    echo "🐚 Setting zsh as default shell..."
+    ZSH_PATH="$(command -v zsh)"
+    if [[ -n "$ZSH_PATH" ]]; then
+      if ! grep -q "$ZSH_PATH" /etc/shells 2>/dev/null; then
+        echo "$ZSH_PATH" | sudo tee -a /etc/shells
+      fi
+      chsh -s "$ZSH_PATH"
+    fi
+  fi
+}
+
+# ------------------------------------------------------------------------------
+# Rust (via rustup - not a package manager install)
+# ------------------------------------------------------------------------------
+install_rust() {
+  if ! command -v rustup &> /dev/null; then
+    echo "🦀 Installing Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+    source "$HOME/.cargo/env"
+  fi
+  rustup update
+  rustup component add clippy rustfmt rust-analyzer
+}
+
+# ------------------------------------------------------------------------------
+# Starship (official installer)
+# ------------------------------------------------------------------------------
+install_starship() {
+  if ! command -v starship &> /dev/null; then
+    echo "🚀 Installing Starship..."
+    curl -sS https://starship.rs/install.sh | sh -s -- -y
+  fi
+}
+
+# ------------------------------------------------------------------------------
+# mise-en-place (official installer)
+# ------------------------------------------------------------------------------
+install_mise() {
+  if ! command -v mise &> /dev/null; then
+    echo "🔧 Installing mise..."
+    curl https://mise.run | sh
+  fi
+}
+
+# ------------------------------------------------------------------------------
+# Main
+# ------------------------------------------------------------------------------
+install_rust
+install_starship
+install_mise
+set_zsh_default
+
+echo ""
+echo "✅ Bootstrap complete!"
+echo "   Packages will be installed by declarative scripts..."

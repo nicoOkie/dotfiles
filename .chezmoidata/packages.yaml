@@ -1,0 +1,72 @@
+# Declarative package management
+# Packages are installed via run_onchange_ scripts when this file changes
+
+packages:
+  # Common packages installed on all systems (used for reference)
+  common:
+    - fzf
+    - ripgrep
+    - fd
+    - bat
+    - eza
+    - zoxide
+    - git
+    - git-delta
+    - neovim
+
+  # macOS via Homebrew
+  darwin:
+    brews:
+      - fzf
+      - ripgrep
+      - fd
+      - bat
+      - eza
+      - zoxide
+      - git
+      - git-delta
+      - neovim
+    casks:
+      - wezterm
+
+  # Linux distributions
+  linux:
+    # Arch-based (Arch, Manjaro, EndeavourOS)
+    arch:
+      - fzf
+      - ripgrep
+      - fd
+      - bat
+      - eza
+      - zoxide
+      - git
+      - git-delta
+      - neovim
+      - wezterm
+      - zsh
+
+    # Debian-based (Debian, Ubuntu, Pop!_OS)
+    debian:
+      - fzf
+      - ripgrep
+      - fd-find
+      - bat
+      - git
+      - neovim
+      - zsh
+    # Note: eza, zoxide, git-delta installed via cargo on Debian
+    # wezterm needs manual repo setup
+
+    # Fedora/RHEL
+    fedora:
+      - fzf
+      - ripgrep
+      - fd-find
+      - bat
+      - eza
+      - zoxide
+      - git
+      - git-delta
+      - neovim
+      - zsh
+    # Note: wezterm needs copr repo

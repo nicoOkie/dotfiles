@@ -1,0 +1,153 @@
+# Base configuration
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+
+# ------------------------------------------------------------------------------
+# History
+# ------------------------------------------------------------------------------
+HISTFILE="$XDG_DATA_HOME/zsh/history"
+HISTSIZE=50000
+SAVEHIST=50000
+
+setopt SHARE_HISTORY          # Share history between all sessions
+setopt HIST_IGNORE_ALL_DUPS   # Remove older duplicate entries
+setopt HIST_IGNORE_SPACE      # Don't record entries starting with space
+setopt HIST_REDUCE_BLANKS     # Remove superfluous blanks
+setopt HIST_VERIFY            # Don't execute immediately on history expansion
+setopt EXTENDED_HISTORY       # Record timestamp of command
+setopt INC_APPEND_HISTORY     # Add commands as they are typed
+
+# Create history directory if needed
+[[ -d "${HISTFILE:h}" ]] || mkdir -p "${HISTFILE:h}"
+
+# ------------------------------------------------------------------------------
+# Navigation & Directory
+# ------------------------------------------------------------------------------
+setopt AUTO_CD                # cd by typing directory name
+setopt AUTO_PUSHD             # Push directory to stack on cd
+setopt PUSHD_IGNORE_DUPS      # Don't push duplicates
+setopt PUSHD_SILENT           # Don't print stack after pushd/popd
+
+# ------------------------------------------------------------------------------
+# Completion
+# ------------------------------------------------------------------------------
+autoload -Uz compinit
+compinit -d "$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
+
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'  # Case insensitive
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/zcompcache"
+
+# Create completion cache directory if needed
+[[ -d "$XDG_CACHE_HOME/zsh" ]] || mkdir -p "$XDG_CACHE_HOME/zsh"
+
+# ------------------------------------------------------------------------------
+# Key bindings
+# ------------------------------------------------------------------------------
+bindkey -v                           # Vi key bindings
+# Up/Down arrows: search history based on what you've typed
+bindkey '^[[A' history-search-backward  # Up arrow
+bindkey '^[[B' history-search-forward   # Down arrow
+
+# Example usage:
+# - Type "git" then press Up arrow → finds previous commands starting with "git"
+# - Press Ctrl+R for fuzzy history search (provided by fzf)
+
+# ------------------------------------------------------------------------------
+# Homebrew (macOS)
+# ------------------------------------------------------------------------------
+{{- if eq .chezmoi.os "darwin" }}
+if [[ -f /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -f /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+{{- end }}
+
+# ------------------------------------------------------------------------------
+# fzf - Fuzzy finder
+# ------------------------------------------------------------------------------
+{{- if eq .chezmoi.os "darwin" }}
+if [[ -f "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/fzf/shell/completion.zsh" ]]; then
+  source "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/fzf/shell/completion.zsh"
+  source "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/fzf/shell/key-bindings.zsh"
+fi
+{{- else }}
+if [[ -f /usr/share/fzf/completion.zsh ]]; then
+  source /usr/share/fzf/completion.zsh
+  source /usr/share/fzf/key-bindings.zsh
+elif [[ -f ~/.fzf.zsh ]]; then
+  source ~/.fzf.zsh
+fi
+{{- end }}
+
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+export FZF_CTRL_T_OPTS="--preview 'head -100 {}'"
+export FZF_ALT_C_OPTS="--preview 'ls -la {}'"
+
+# ------------------------------------------------------------------------------
+# Starship prompt
+# ------------------------------------------------------------------------------
+if command -v starship &> /dev/null; then
+  eval "$(starship init zsh)"
+fi
+
+# ------------------------------------------------------------------------------
+# Aliases
+# ------------------------------------------------------------------------------
+
+# Modern replacements (use if available)
+if command -v bat &> /dev/null; then
+  alias cat='bat --paging=never'
+  alias catp='bat'  # with pager
+fi
+
+if command -v eza &> /dev/null; then
+  alias ls='eza --color=auto --icons'
+  alias ll='eza -lah --icons --git'
+  alias la='eza -a --icons'
+  alias lt='eza --tree --level=2 --icons'
+  alias l='eza -F --icons'
+else
+  alias ls='ls --color=auto'
+  alias ll='ls -lah'
+  alias la='ls -A'
+  alias l='ls -CF'
+fi
+
+if command -v fd &> /dev/null; then
+  alias find='fd'
+fi
+
+if command -v rg &> /dev/null; then
+  alias grep='rg'
+else
+  alias grep='grep --color=auto'
+fi
+
+if command -v zoxide &> /dev/null; then
+  eval "$(zoxide init zsh)"
+  alias cd='z'
+fi
+
+# Navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Git shortcuts
+alias g='git'
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph'
+alias gd='git diff'
+
+# Safety
+alias rm='rm -i'
+alias mv='mv -i'
+alias cp='cp -i'
