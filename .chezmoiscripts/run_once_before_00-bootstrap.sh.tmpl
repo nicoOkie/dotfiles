@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euo pipefail
+
+echo "🎩 Setting up Fedora..."
+
+# Configure dnf for speed and convenience
+echo "⚙️  Configuring dnf..."
+sudo tee /etc/dnf/dnf.conf > /dev/null <<EOF
+[main]
+gpgcheck=True
+installonly_limit=3
+clean_requirements_on_remove=True
+best=False
+skip_if_unavailable=True
+assumeyes=True
+max_parallel_downloads=10
+fastestmirror=True
+EOF
+
+# System update
+echo "🔄 Updating system..."
+sudo dnf upgrade --refresh
+
+# Zsh
+echo "🐚 Installing zsh..."
+sudo dnf install zsh
+
+# Set zsh as default shell
+if [[ "$SHELL" != *"zsh"* ]]; then
+  echo "🔧 Setting zsh as default shell..."
+  chsh -s "$(which zsh)"
+fi
+
+echo "✅ Done!"
